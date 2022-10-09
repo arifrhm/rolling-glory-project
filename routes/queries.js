@@ -36,7 +36,7 @@ const createGift = (request, response) => {
     if (error) {
       throw error
     }
-    response.status(201).send(`User added with ID: ${results.rows[0].id}`)
+    response.status(201).json(`User added with ID: ${results.rows[0].id}`)
   })
 }
 
@@ -51,7 +51,7 @@ const updateGift = (request, response) => {
       if (error) {
         throw error
       }
-      response.status(200).send(`Gifts modified with ID: ${id}`)
+      response.status(200).json(`Gifts modified with ID: ${id}`)
     }
   )
 }
@@ -63,7 +63,7 @@ const deleteGift = (request, response) => {
     if (error) {
       throw error
     }
-    response.status(200).send(`Gifts deleted with ID: ${id}`)
+    response.status(200).json(`Gifts deleted with ID: ${id}`)
   })
 }
 
@@ -77,7 +77,7 @@ const registerUser = (request, response) => {
 			// If the account exists
 			if (results) {
 				// Give alert response data already exists
-				response.status(409).send('This account is already exists!');
+				response.status(409).json('This account is already exists!');
 			} 
       else {
         // Insert new users data
@@ -86,7 +86,7 @@ const registerUser = (request, response) => {
             console.log(`Inilah error yang terjadi : ${error}`);
             throw error;
           }
-          response.status(201).send(`Successfully Register`)
+          response.status(201).json(`Successfully Register with ${results.rows}`)
         })
 			}			
 
@@ -108,10 +108,10 @@ const loginUser = (request, response) => {
 				request.session.loggedin = true;
 				request.session.username = username;
 				// Redirect to home page
-				response.status(200).send('Succesfully login');
+				response.status(200).json('Succesfully login');
 			} 
       else {
-				response.status(401).send('Incorrect Email and/or Password!');
+				response.status(401).json('Incorrect Email and/or Password!');
 			}			
 			response.end();
     })
@@ -121,13 +121,13 @@ const loginUser = (request, response) => {
     if (error) {
       throw error
     }
-    response.status(201).send(`Successfully Login`)
+    response.status(201).json(`Successfully Login`)
   })
 }
 
 const logoutUser = (request, response) => {
   request.session.loggedin = false;
-  response.status(200).send('Logged out...')
+  response.status(200).json('Logged out...')
 	response.end();
 }
 
