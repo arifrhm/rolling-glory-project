@@ -43,8 +43,8 @@ const updateGift = (request, response) => {
   const { title, points, reviews, stocks } = request.body
 
   pool.query(
-    'UPDATE gifts SET title = $1, points = $2, reviews = $3, stocks = $4 WHERE id = $5',
-    [title, points, reviews, stocks, id],
+    `UPDATE gifts SET title = $1, points = $2, reviews = $3, stocks = $4 WHERE id = ${id}`,
+    [title, points, reviews, stocks],
     (error, results) => {
       if (error) {
         throw error
