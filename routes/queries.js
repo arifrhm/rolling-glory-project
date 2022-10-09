@@ -70,12 +70,12 @@ const deleteGift = (request, response) => {
 const registerUser = (request, response) => {
   const email = request.body.email;
   const hashedPassword = crypto.createHash('sha256').update(request.body.password).digest('base64');
-  if (username && password){
+  if (email && hashedPassword){
     pool.query('SELECT * FROM users WHERE email = $1 AND password = $2',[email,hashedPassword], (error, results) => {
       // If there is an issue with the query, output the error
 			if (error) throw error;
 			// If the account exists
-			if (results) {
+			if (results.rows.email === email && results.rows.password == hashedPassword) {
 				// Give alert response data already exists
 				response.status(409).json('This account is already exists!');
 			} 
@@ -86,11 +86,13 @@ const registerUser = (request, response) => {
             console.log(`Inilah error yang terjadi : ${error}`);
             throw error;
           }
-          response.status(201).json(`Successfully Register with ${results.rows}`)
+          response.status(201).json({
+            "status_code" : 201,
+            "message" : "Registration successfully",
+            "data":results.rows
+          })
         })
 			}			
-
-			response.end();
     })
   }
   
