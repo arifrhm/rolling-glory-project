@@ -1,3 +1,5 @@
+var crypto = require('crypto');
+
 const Pool = require('pg').Pool
 const pool = new Pool({
   user: 'webdev',
@@ -65,10 +67,77 @@ const deleteGift = (request, response) => {
   })
 }
 
+const registerUser = (request, response) => {
+  const email = request.body.email;
+  const hashedPassword = crypto.createHash('sha256').update(request.body.password).digest('base64');
+  if (username && password){
+    pool.query('SELECT * FROM users WHERE email = $1 AND password = $2',[email,hashedPassword], (error, results) => {
+      // If there is an issue with the query, output the error
+			if (error) throw error;
+			// If the account exists
+			if (results) {
+				// Give alert response data already exists
+				response.status(409).send('This account is already exists!');
+			} 
+      else {
+        // Insert new users data
+        pool.query('INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *', [email,hashedPassword], (error, results) => {
+          if (error) {
+            console.log(`Inilah error yang terjadi : ${error}`);
+            throw error;
+          }
+          response.status(201).send(`Successfully Register`)
+        })
+			}			
+
+			response.end();
+    })
+  }
+  
+}
+
+const loginUser = (request, response) => {
+  const { email, password } = request.body
+  if (username && password){
+    pool.query('SELECT * FROM users WHERE email = $1 AND password = $2',[email,password], (error, results) => {
+      // If there is an issue with the query, output the error
+			if (error) throw error;
+			// If the account exists
+			if (results.length > 0) {
+				// Authenticate the user
+				request.session.loggedin = true;
+				request.session.username = username;
+				// Redirect to home page
+				response.status(200).send('Succesfully login');
+			} 
+      else {
+				response.status(401).send('Incorrect Email and/or Password!');
+			}			
+			response.end();
+    })
+  }
+  
+  pool.query('INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *', [email,password], (error, results) => {
+    if (error) {
+      throw error
+    }
+    response.status(201).send(`Successfully Login`)
+  })
+}
+
+const logoutUser = (request, response) => {
+  request.session.loggedin = false;
+  response.status(200).send('Logged out...')
+	response.end();
+}
+
 module.exports = {
   getGifts,
   getGiftById,
   createGift,
   updateGift,
   deleteGift,
+  registerUser,
+  loginUser,
+  logoutUser
 } 

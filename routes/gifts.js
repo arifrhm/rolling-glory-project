@@ -10,5 +10,5 @@ router.get('/:id', queriesFunction.getGiftById);
 router.post('/',queriesFunction.createGift);
 router.put('/:id',queriesFunction.updateGift);
 router.delete('/:id',queriesFunction.deleteGift);
-
+router.post('/redeem')
 module.exports = router;
