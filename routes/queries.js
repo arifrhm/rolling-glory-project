@@ -14,7 +14,12 @@ const getGifts = (request, response) => {
     if (error) {
       throw error
     }
-    response.status(200).json(results.rows)
+    response.status(200).json(
+      {
+        "status_code": 200,
+        "message": "Successfully get data",
+        "data": results.rows
+      })
   })
 }
 
@@ -25,7 +30,12 @@ const getGiftById = (request, response) => {
     if (error) {
       throw error
     }
-    response.status(200).json(results.rows)
+    response.status(200).json(
+      {
+        "status_code": 200,
+        "message": `Succesfully get gift data with ID: ${results.rows[0].id}`,
+        "data": results.rows[0]
+      })
   })
 }
 
@@ -36,7 +46,13 @@ const createGift = (request, response) => {
     if (error) {
       throw error
     }
-    response.status(201).json(`User added with ID: ${results.rows[0].id}`)
+    response.status(201).json(
+      {
+        "status_code": 201,
+        "message": `Gift added with ID: ${results.rows[0].id}`,
+        "data": results.rows[0]
+      }
+    )
   })
 }
 
@@ -51,7 +67,13 @@ const updateGift = (request, response) => {
       if (error) {
         throw error
       }
-      response.status(200).json(`Gifts modified with ID: ${id}`)
+      response.status(200).json(
+        {
+          "status_code": 200,
+          "message": `Gift modified with ID: ${id}`,
+          "data": results.rows[0]
+        }
+      )
     }
   )
 }
@@ -63,63 +85,74 @@ const deleteGift = (request, response) => {
     if (error) {
       throw error
     }
-    response.status(200).json(`Gifts deleted with ID: ${id}`)
+    response.status(200).json(
+      {
+        "status_code": 200,
+        "message": `Gifts deleted with ID: ${id}`,
+        "data": results.rows[0]
+      }
+    )
   })
 }
 
 const registerUser = (request, response) => {
   const email = request.body.email;
   const hashedPassword = crypto.createHash('sha256').update(request.body.password).digest('base64');
-  if (email && hashedPassword){
-    pool.query('SELECT * FROM users WHERE email = $1 AND password = $2',[email,hashedPassword], (error, results) => {
+  if (email && hashedPassword) {
+    pool.query('SELECT * FROM users WHERE email = $1 AND password = $2', [email, hashedPassword], (error, results) => {
       // If there is an issue with the query, output the error
-			if (error) throw error;
-			// If the account exists
-			if (results.rows[0].email === email && results.rows[0].password == hashedPassword) {
-				// Give alert response data already exists
-				response.status(409).json('This account is already exists!');
-			} 
+      if (error) throw error;
+      // If the account exists
+      if (results.rows[0].email === email && results.rows[0].password == hashedPassword) {
+        // Give alert response data already exists
+        response.status(409).json(
+          {
+            "status_code": 409,
+            "message": 'This account is already exists!',
+            "data": results.rows[0]
+          }
+        );
+      }
       else {
         // Insert new users data
-        pool.query('INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *', [email,hashedPassword], (error, results) => {
+        pool.query('INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *', [email, hashedPassword], (error, results) => {
           if (error) {
-            console.log(`Inilah error yang terjadi : ${error}`);
             throw error;
           }
           response.status(201).json({
-            "status_code" : 201,
-            "message" : "Registration successfully",
-            "data":results.rows[0]
+            "status_code": 201,
+            "message": "Registration successfully",
+            "data": results.rows[0]
           })
         })
-			}			
+      }
     })
   }
-  
+
 }
 
 const loginUser = (request, response) => {
   const { email, password } = request.body
-  if (username && password){
-    pool.query('SELECT * FROM users WHERE email = $1 AND password = $2',[email,password], (error, results) => {
+  if (username && password) {
+    pool.query('SELECT * FROM users WHERE email = $1 AND password = $2', [email, password], (error, results) => {
       // If there is an issue with the query, output the error
-			if (error) throw error;
-			// If the account exists
-			if (results.length > 0) {
-				// Authenticate the user
-				request.session.loggedin = true;
-				request.session.username = username;
-				// Redirect to home page
-				response.status(200).json('Succesfully login');
-			} 
+      if (error) throw error;
+      // If the account exists
+      if (results.length > 0) {
+        // Authenticate the user
+        request.session.loggedin = true;
+        request.session.username = username;
+        // Redirect to home page
+        response.status(200).json('Succesfully login');
+      }
       else {
-				response.status(401).json('Incorrect Email and/or Password!');
-			}			
-			response.end();
+        response.status(401).json('Incorrect Email and/or Password!');
+      }
+      response.end();
     })
   }
-  
-  pool.query('INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *', [email,password], (error, results) => {
+
+  pool.query('INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *', [email, password], (error, results) => {
     if (error) {
       throw error
     }
@@ -130,7 +163,7 @@ const loginUser = (request, response) => {
 const logoutUser = (request, response) => {
   request.session.loggedin = false;
   response.status(200).json('Logged out...')
-	response.end();
+  response.end();
 }
 
 module.exports = {
