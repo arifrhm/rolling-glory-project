@@ -1,5 +1,5 @@
-var crypto = require('crypto');
-
+const crypto = require('crypto');
+const jwtKeyFromConfig = require('../config/index').jwtKey;
 const Pool = require('pg').Pool
 const pool = new Pool({
   user: 'webdev',
@@ -138,32 +138,44 @@ const loginUser = (request, response) => {
       // If there is an issue with the query, output the error
       if (error) throw error;
       // If the account exists
-      if (results.length > 0) {
-        // Authenticate the user
-        request.session.loggedin = true;
-        request.session.username = username;
-        // Redirect to home page
-        response.status(200).json('Succesfully login');
+      if (results.rows[0]) {
+        let minutesToAdd = 5;
+        let currentDate = new Date();
+        let futureDate = new Date(currentDate.getTime() + minutesToAdd * 60000);
+        // Return bearer token
+        pool.query('INSERT INTO token (token, valid_until) VALUES ($1, $2) RETURNING *', [token, futureDate], (error, results) => {
+          // If there is an issue with the query, output the error
+          if (error) {
+            throw error
+          }
+          response.status(200).json(
+            {
+              "status_code": 200,
+              "message": `Successfully Login`,
+              "data": {
+                "access_token": results.rows[0].token,
+                "token_type": "Bearer",
+                "valid_until": results.rows[0].valid_until
+              }
+            }
+          )
+        })
       }
       else {
-        response.status(401).json('Incorrect Email and/or Password!');
+        response.status(401).json(
+          {
+            "status_code": 401,
+            "message": 'Incorrect Email and/or Password!'
+          });
       }
-      response.end();
     })
   }
 
-  pool.query('INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *', [email, password], (error, results) => {
-    if (error) {
-      throw error
-    }
-    response.status(201).json(`Successfully Login`)
-  })
+
 }
 
 const logoutUser = (request, response) => {
-  request.session.loggedin = false;
   response.status(200).json('Logged out...')
-  response.end();
 }
 
 module.exports = {
