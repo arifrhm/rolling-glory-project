@@ -75,7 +75,7 @@ const registerUser = (request, response) => {
       // If there is an issue with the query, output the error
 			if (error) throw error;
 			// If the account exists
-			if (results.rows.email === email && results.rows.password == hashedPassword) {
+			if (results.rows[0].email === email && results.rows[0].password == hashedPassword) {
 				// Give alert response data already exists
 				response.status(409).json('This account is already exists!');
 			} 
@@ -89,7 +89,7 @@ const registerUser = (request, response) => {
           response.status(201).json({
             "status_code" : 201,
             "message" : "Registration successfully",
-            "data":results.rows
+            "data":results.rows[0]
           })
         })
 			}			
