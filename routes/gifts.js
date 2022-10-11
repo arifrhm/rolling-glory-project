@@ -1,14 +1,13 @@
-
-
-var express = require('express');
+const express = require('express');
 var router = express.Router();
-var queriesFunction = require('./queries')
+let queriesFunction = require('./queries')
+let auth = require('../middleware/auth');
 
 /* GET users listing. */
-router.get('/', queriesFunction.getGifts);
-router.get('/:id', queriesFunction.getGiftById);
-router.post('/',queriesFunction.createGift);
-router.put('/:id',queriesFunction.updateGift);
-router.delete('/:id',queriesFunction.deleteGift);
-router.post('/redeem')
+router.get('/', auth, queriesFunction.getGifts);
+router.get('/:id', auth, queriesFunction.getGiftById);
+router.post('/', auth, queriesFunction.createGift);
+router.put('/:id', auth, queriesFunction.updateGift);
+router.delete('/:id', auth, queriesFunction.deleteGift);
+
 module.exports = router;

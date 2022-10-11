@@ -7,7 +7,9 @@ var logger = require('morgan');
 var indexRouter = require('./routes/index');
 var giftsRouter = require('./routes/gifts');
 var loginRouter = require('./routes/');
-var registerRouter = require('./routes/register')
+var registerRouter = require('./routes/register');
+var logoutRouter = require('./routes/logout');
+var redeemGift = require('./routes/redeem');
 
 var app = express();
 
@@ -21,6 +23,8 @@ app.use('/', indexRouter);
 app.use('/gifts', giftsRouter);
 app.use('/login',loginRouter);
 app.use('/register',registerRouter);
+app.use('/logout',logoutRouter);
+app.use('/redeem',redeemGift);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

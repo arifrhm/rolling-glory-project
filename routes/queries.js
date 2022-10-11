@@ -1,12 +1,16 @@
 const crypto = require('crypto');
-const jwtKeyFromConfig = require('../config/index').jwtKey;
+const { response } = require('express');
+const { request } = require('http');
+const generateAccessToken = require('../middleware/auth');
+
+
 const Pool = require('pg').Pool
 const pool = new Pool({
-  user: 'webdev',
-  host: 'localhost',
-  database: 'webdev_db',
-  password: '',
-  port: 5432,
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
 })
 
 const getGifts = (request, response) => {
@@ -14,7 +18,7 @@ const getGifts = (request, response) => {
     if (error) {
       throw error
     }
-    response.status(200).json(
+    return response.status(200).json(
       {
         "status_code": 200,
         "message": "Successfully get data",
@@ -30,7 +34,7 @@ const getGiftById = (request, response) => {
     if (error) {
       throw error
     }
-    response.status(200).json(
+    return response.status(200).json(
       {
         "status_code": 200,
         "message": `Succesfully get gift data with ID: ${results.rows[0].id}`,
@@ -46,7 +50,7 @@ const createGift = (request, response) => {
     if (error) {
       throw error
     }
-    response.status(201).json(
+    return response.status(201).json(
       {
         "status_code": 201,
         "message": `Gift added with ID: ${results.rows[0].id}`,
@@ -67,7 +71,7 @@ const updateGift = (request, response) => {
       if (error) {
         throw error
       }
-      response.status(200).json(
+      return response.status(200).json(
         {
           "status_code": 200,
           "message": `Gift modified with ID: ${id}`,
@@ -85,7 +89,7 @@ const deleteGift = (request, response) => {
     if (error) {
       throw error
     }
-    response.status(200).json(
+    return response.status(200).json(
       {
         "status_code": 200,
         "message": `Gifts deleted with ID: ${id}`,
@@ -99,13 +103,17 @@ const registerUser = (request, response) => {
   const email = request.body.email;
   const hashedPassword = crypto.createHash('sha256').update(request.body.password).digest('base64');
   if (email && hashedPassword) {
+    
     pool.query('SELECT * FROM users WHERE email = $1 AND password = $2', [email, hashedPassword], (error, results) => {
+      
       // If there is an issue with the query, output the error
-      if (error) throw error;
+      if (error) console.log(error);
+      
       // If the account exists
-      if (results.rows[0].email === email && results.rows[0].password == hashedPassword) {
+      console.log('passed this');
+      if ( email === results.rows[0].email && hashedPassword  ===  results.rows[0].password) {
         // Give alert response data already exists
-        response.status(409).json(
+        return response.status(409).json(
           {
             "status_code": 409,
             "message": 'This account is already exists!',
@@ -119,7 +127,7 @@ const registerUser = (request, response) => {
           if (error) {
             throw error;
           }
-          response.status(201).json({
+          return response.status(201).json({
             "status_code": 201,
             "message": "Registration successfully",
             "data": results.rows[0]
@@ -132,9 +140,10 @@ const registerUser = (request, response) => {
 }
 
 const loginUser = (request, response) => {
-  const { email, password } = request.body
-  if (username && password) {
-    pool.query('SELECT * FROM users WHERE email = $1 AND password = $2', [email, password], (error, results) => {
+  const email = request.body.email;
+  const hashedPassword = crypto.createHash('sha256').update(request.body.password).digest('base64');
+  if (email && hashedPassword) {
+    pool.query('SELECT * FROM users WHERE email = $1 AND password = $2', [email, hashedPassword], (error, results) => {
       // If there is an issue with the query, output the error
       if (error) throw error;
       // If the account exists
@@ -142,13 +151,14 @@ const loginUser = (request, response) => {
         let minutesToAdd = 5;
         let currentDate = new Date();
         let futureDate = new Date(currentDate.getTime() + minutesToAdd * 60000);
+        const token = generateAccessToken({ username: email, expiredTime: futureDate});
         // Return bearer token
         pool.query('INSERT INTO token (token, valid_until) VALUES ($1, $2) RETURNING *', [token, futureDate], (error, results) => {
           // If there is an issue with the query, output the error
           if (error) {
             throw error
           }
-          response.status(200).json(
+          return response.status(200).json(
             {
               "status_code": 200,
               "message": `Successfully Login`,
@@ -162,7 +172,7 @@ const loginUser = (request, response) => {
         })
       }
       else {
-        response.status(401).json(
+        return response.status(401).json(
           {
             "status_code": 401,
             "message": 'Incorrect Email and/or Password!'
@@ -174,8 +184,19 @@ const loginUser = (request, response) => {
 
 }
 
-const logoutUser = (request, response) => {
-  response.status(200).json('Logged out...')
+const logoutUser = (request, response, next) => {
+  const token = req.headers["x-access-token"];
+  pool.query('DELETE FROM tokens WHERE token = $1', [token], (error, results) => {
+    if(error) throw error;
+    return response.status(200).json('Logged out...');
+  });
+}
+
+const redeemGift = (request,response,next) => {
+  // Kurangi poin users
+  // Kurangi stok
+  // Give rating
+  response.status(200).json({result:'Reedemed...'});
 }
 
 module.exports = {
@@ -186,5 +207,6 @@ module.exports = {
   deleteGift,
   registerUser,
   loginUser,
-  logoutUser
+  logoutUser,
+  redeemGift
 } 
