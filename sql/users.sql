@@ -6,6 +6,7 @@
 
 CREATE TABLE public.users (
 	email varchar NOT NULL,
+	points int8 NOT NULL,
 	password varchar NOT NULL,
 	id int8 NOT NULL,
 	CONSTRAINT users_pk PRIMARY KEY (id)

@@ -6,7 +6,7 @@
 
 CREATE TABLE public.gifts (
 	title varchar NOT NULL,
-	points int4 NOT NULL,
+	points_needed int4 NOT NULL,
 	reviews float8 NOT NULL,
 	stocks int4 NOT NULL,
 	id int8 NOT NULL,

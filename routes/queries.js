@@ -6,11 +6,11 @@ const generateAccessToken = require('../middleware/auth');
 
 const Pool = require('pg').Pool
 const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
+  user: 'webdev',
+  host: 'localhost',
+  database: 'webdev_db',
+  password: '',
+  port: 5432,
 })
 
 const getGifts = (request, response) => {
@@ -102,28 +102,30 @@ const deleteGift = (request, response) => {
 const registerUser = (request, response) => {
   const email = request.body.email;
   const hashedPassword = crypto.createHash('sha256').update(request.body.password).digest('base64');
+  const points = request.body.points;
   if (email && hashedPassword) {
-    
     pool.query('SELECT * FROM users WHERE email = $1 AND password = $2', [email, hashedPassword], (error, results) => {
-      
+
       // If there is an issue with the query, output the error
       if (error) console.log(error);
-      
+
       // If the account exists
       console.log('passed this');
-      if ( email === results.rows[0].email && hashedPassword  ===  results.rows[0].password) {
-        // Give alert response data already exists
-        return response.status(409).json(
-          {
-            "status_code": 409,
-            "message": 'This account is already exists!',
-            "data": results.rows[0]
-          }
-        );
+      try {
+        if (email === results.rows[0].email && hashedPassword === results.rows[0].password) {
+          // Give alert response data already exists
+          return response.status(409).json(
+            {
+              "status_code": 409,
+              "message": 'This account is already exists!',
+              "data": results.rows[0]
+            }
+          );
+        }
       }
-      else {
+      catch (err) {
         // Insert new users data
-        pool.query('INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *', [email, hashedPassword], (error, results) => {
+        pool.query('INSERT INTO users (email, password, points) VALUES ($1, $2, $3) RETURNING *', [email, hashedPassword, points], (error, results) => {
           if (error) {
             throw error;
           }
@@ -134,11 +136,9 @@ const registerUser = (request, response) => {
           })
         })
       }
-    })
+    });
   }
-
 }
-
 const loginUser = (request, response) => {
   const email = request.body.email;
   const hashedPassword = crypto.createHash('sha256').update(request.body.password).digest('base64');
@@ -151,9 +151,9 @@ const loginUser = (request, response) => {
         let minutesToAdd = 5;
         let currentDate = new Date();
         let futureDate = new Date(currentDate.getTime() + minutesToAdd * 60000);
-        const token = generateAccessToken({ username: email, expiredTime: futureDate});
+        const token = generateAccessToken({ username: email, expiredTime: futureDate });
         // Return bearer token
-        pool.query('INSERT INTO token (token, valid_until) VALUES ($1, $2) RETURNING *', [token, futureDate], (error, results) => {
+        pool.query('INSERT INTO tokens (token, valid_until) VALUES ($1, $2) RETURNING *', [token, futureDate], (error, results) => {
           // If there is an issue with the query, output the error
           if (error) {
             throw error
@@ -180,23 +180,21 @@ const loginUser = (request, response) => {
       }
     })
   }
-
-
 }
 
 const logoutUser = (request, response, next) => {
   const token = req.headers["x-access-token"];
   pool.query('DELETE FROM tokens WHERE token = $1', [token], (error, results) => {
-    if(error) throw error;
+    if (error) throw error;
     return response.status(200).json('Logged out...');
   });
 }
 
-const redeemGift = (request,response,next) => {
+const redeemGift = (request, response, next) => {
   // Kurangi poin users
   // Kurangi stok
   // Give rating
-  response.status(200).json({result:'Reedemed...'});
+  response.status(200).json({ result: 'Reedemed...' });
 }
 
 module.exports = {
