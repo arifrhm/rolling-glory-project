@@ -5,6 +5,6 @@ var router = express.Router();
 var queriesFunction = require('./queries')
 let auth = require('../middleware/auth');
 
-/* POST logout request. */
-router.get('/', auth, queriesFunction.logoutUser);
+/* DELETE logout request. */
+router.delete('/', auth, queriesFunction.logoutUser);
 module.exports = router;

@@ -14,7 +14,12 @@ const verifyToken = (req, res, next) => {
   const token =
     req.body.token || req.query.token || req.headers["x-access-token"];
   if (!token) {
-    return res.status(403).send("A token is required for authentication");
+    return res.status(403).json(
+      {
+        "status" : 403,
+        "message":"A token is required for authentication"
+      }
+      );
   }
   pool.query('SELECT * FROM tokens WHERE token = $1', [id], (error, results) => {
     if (error) {
@@ -24,7 +29,10 @@ const verifyToken = (req, res, next) => {
       const decoded = jwt.verify(token, config.TOKEN_KEY);
       req.user = decoded;
     } catch (err) {
-      return res.status(401).send("Invalid Token");
+      return res.status(401).json({
+        "status" : 401,
+        "message": "A token is invalid"
+      });
     }
     return next();
   })
