@@ -20,23 +20,22 @@ const verifyToken = (req, res, next) => {
       if (error) {
         throw error
       }
-      try {
+      if(results.rows.length > 0) {
         const decoded = jwt.verify(token, config.TOKEN_KEY);
         req.user = decoded;
-      } catch (err) {
+        return next();
+      } else {
         return res.status(401).json({
           "status" : 401,
-          "message": "A token is invalid"
+          "message": "Unauthorized!!"
         });
       }
-      return next();
     })
   }
   catch(err){
-    console.log(err)
-    return res.status(404).json({
-      "status" : 404,
-      "message": "A token you search is not available or deleted"
+    return res.status(505).json({
+      "status" : 505,
+      "message": "A token is invalid"
     });
   }
 }

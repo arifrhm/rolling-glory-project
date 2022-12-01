@@ -46,7 +46,7 @@ const getGiftById = (request, response) => {
 const createGift = (request, response) => {
   const { title, points, reviews, stocks } = request.body
 
-  pool.query('INSERT INTO gifts (title, points, reviews, stocks) VALUES ($1, $2, $3, $4) RETURNING *', [title, points, reviews, stocks], (error, results) => {
+  pool.query('INSERT INTO gifts (title, points_needed, reviews, stocks) VALUES ($1, $2, $3, $4) RETURNING *', [title, points, reviews, stocks], (error, results) => {
     if (error) {
       throw error
     }
@@ -186,9 +186,11 @@ const loginUser = (request, response) => {
 }
 
 const logoutUser = (request, response, next) => {
-  const token = req.headers["x-access-token"];
+  const token = request.headers["x-access-token"];
   pool.query('DELETE FROM tokens WHERE token = $1', [token], (error, results) => {
-    if (error) throw error;
+    if (error) { 
+      console.log(error);
+      throw error;}
     return response.status(200).json('Logged out...');
   });
 }
