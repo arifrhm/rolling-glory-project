@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const { response } = require('express');
 const { request } = require('http');
-const generateAccessToken = require('../middleware/auth');
+const generateAccessToken = require('../middleware/jwt');
 
 
 const Pool = require('pg').Pool
@@ -127,6 +127,7 @@ const registerUser = (request, response) => {
         // Insert new users data
         pool.query('INSERT INTO users (email, password, points) VALUES ($1, $2, $3) RETURNING *', [email, hashedPassword, points], (error, results) => {
           if (error) {
+            console.log(error);
             throw error;
           }
           return response.status(201).json({
@@ -151,11 +152,13 @@ const loginUser = (request, response) => {
         let minutesToAdd = 5;
         let currentDate = new Date();
         let futureDate = new Date(currentDate.getTime() + minutesToAdd * 60000);
-        const token = generateAccessToken({ username: email, expiredTime: futureDate });
+        const token = generateAccessToken({ username: email, expiredTime: '24h' });
         // Return bearer token
-        pool.query('INSERT INTO tokens (token, valid_until) VALUES ($1, $2) RETURNING *', [token, futureDate], (error, results) => {
+        const users_id = results.rows[0].id
+        pool.query('INSERT INTO tokens (token, valid_until, users_id) VALUES ($1, $2, $3) RETURNING *', [token, futureDate, users_id], (error, results) => {
           // If there is an issue with the query, output the error
           if (error) {
+            console.log(error);
             throw error
           }
           return response.status(200).json(
